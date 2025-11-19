@@ -1,0 +1,821 @@
+{
+  "info": {
+    "name": "08 - Device Management API",
+    "description": "Device management endpoints for listing and managing devices",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "device_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "hierarchy_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Setup",
+      "item": [
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.token) {",
+                  "        pm.collectionVariables.set('admin_token', response.data.token);",
+                  "        console.log('Admin token saved');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@saherflow.com\",\n  \"password\": \"Admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "User Login (Arabco)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.token) {",
+                  "        pm.collectionVariables.set('user_token', response.data.token);",
+                  "        console.log('User token saved');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@arabco.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Device List APIs",
+      "item": [
+        {
+          "name": "Get All Devices (User Company)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices"]
+            },
+            "description": "Get all devices for user's company with pagination"
+          }
+        },
+        {
+          "name": "Get All Devices with Filters",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices?search=MPFM&status=online&deviceType=MPFM&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "MPFM"
+                },
+                {
+                  "key": "status",
+                  "value": "online"
+                },
+                {
+                  "key": "deviceType",
+                  "value": "MPFM"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get devices with search, status, and type filters"
+          }
+        },
+        {
+          "name": "Get Devices by Hierarchy (Eastern Region)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/hierarchy/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "hierarchy", "1"]
+            },
+            "description": "Get all devices under Eastern Region hierarchy"
+          }
+        },
+        {
+          "name": "Get Devices by Hierarchy with Filters",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/hierarchy/1?search=ARB&status=online&deviceType=MPFM",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "hierarchy", "1"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "ARB"
+                },
+                {
+                  "key": "status",
+                  "value": "online"
+                },
+                {
+                  "key": "deviceType",
+                  "value": "MPFM"
+                }
+              ]
+            },
+            "description": "Get devices under hierarchy with filters"
+          }
+        },
+        {
+          "name": "Get Devices by Area (Abqaiq Area)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/hierarchy/2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "hierarchy", "2"]
+            },
+            "description": "Get all devices under Abqaiq Area"
+          }
+        },
+        {
+          "name": "Get Devices by Field (Ghawar Field)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/hierarchy/3",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "hierarchy", "3"]
+            },
+            "description": "Get all devices under Ghawar Field"
+          }
+        },
+        {
+          "name": "Get Devices by Well (Well-101)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/hierarchy/4",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "hierarchy", "4"]
+            },
+            "description": "Get all devices under Well-101"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Device Details",
+      "item": [
+        {
+          "name": "Get Device by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}"]
+            },
+            "description": "Get detailed information for a specific device"
+          }
+        },
+        {
+          "name": "Get Device Details (MPFM-ARB-101)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "1"]
+            },
+            "description": "Get details for MPFM-ARB-101 device"
+          }
+        },
+        {
+          "name": "Get Device Details (MPFM-ARB-102)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/4",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "4"]
+            },
+            "description": "Get details for MPFM-ARB-102 device"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Device Management",
+      "item": [
+        {
+          "name": "Get All Devices (Admin - All Companies)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices"]
+            },
+            "description": "Admin can see all devices across companies"
+          }
+        },
+        {
+          "name": "Get Devices for Specific Company (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices?company_id=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices"],
+              "query": [
+                {
+                  "key": "company_id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Admin can filter devices by specific company"
+          }
+        },
+        {
+          "name": "Update Device Metadata (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"metadata\": {\n    \"model\": \"MPFM-X1-Updated\",\n    \"install_date\": \"2024-01-15\",\n    \"status\": \"active\",\n    \"location\": \"Ghawar-Well-101\",\n    \"maintenance_schedule\": \"Monthly\",\n    \"calibration_date\": \"2024-01-01\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}"]
+            },
+            "description": "Update device metadata (admin only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Filter and Search Tests",
+      "item": [
+        {
+          "name": "Search by Device Serial",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices?search=MPFM-ARB-101",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "MPFM-ARB-101"
+                }
+              ]
+            },
+            "description": "Search for specific device by serial number"
+          }
+        },
+        {
+          "name": "Filter by Online Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices?status=online",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "online"
+                }
+              ]
+            },
+            "description": "Filter devices by online status"
+          }
+        },
+        {
+          "name": "Filter by Offline Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices?status=offline",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "offline"
+                }
+              ]
+            },
+            "description": "Filter devices by offline status"
+          }
+        },
+        {
+          "name": "Filter by Device Type (MPFM)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices?deviceType=MPFM",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices"],
+              "query": [
+                {
+                  "key": "deviceType",
+                  "value": "MPFM"
+                }
+              ]
+            },
+            "description": "Filter devices by type (MPFM)"
+          }
+        },
+        {
+          "name": "Filter by Device Type (Pressure Sensor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices?deviceType=Pressure Sensor",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices"],
+              "query": [
+                {
+                  "key": "deviceType",
+                  "value": "Pressure Sensor"
+                }
+              ]
+            },
+            "description": "Filter devices by type (Pressure Sensor)"
+          }
+        },
+        {
+          "name": "Combined Filters",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices?search=Well-101&status=online&deviceType=MPFM",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Well-101"
+                },
+                {
+                  "key": "status",
+                  "value": "online"
+                },
+                {
+                  "key": "deviceType",
+                  "value": "MPFM"
+                }
+              ]
+            },
+            "description": "Test multiple filters combined"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Access Control Tests",
+      "item": [
+        {
+          "name": "Access Device from Another Company",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/25",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "25"]
+            },
+            "description": "Test access control - should fail if device belongs to another company"
+          }
+        },
+        {
+          "name": "Access Hierarchy from Another Company",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/hierarchy/19",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "hierarchy", "19"]
+            },
+            "description": "Test access control - should fail if hierarchy belongs to another company"
+          }
+        },
+        {
+          "name": "Update Device as Regular User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"metadata\": {\n    \"unauthorized\": \"update\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "1"]
+            },
+            "description": "Test admin access - should fail (403 Forbidden)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pagination Tests",
+      "item": [
+        {
+          "name": "Get First Page (5 items)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices?page=1&limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Test pagination - first page with 5 items"
+          }
+        },
+        {
+          "name": "Get Second Page (5 items)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices?page=2&limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Test pagination - second page with 5 items"
+          }
+        }
+      ]
+    }
+  ]
+}

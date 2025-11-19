@@ -1,0 +1,168 @@
+{
+  "info": {
+    "name": "05 - Health Check & Utilities",
+    "description": "Health checks and utility endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Checks",
+      "item": [
+        {
+          "name": "API Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('API is healthy', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.message).to.include('running');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "health"]
+            },
+            "description": "Check if API server is running"
+          }
+        },
+        {
+          "name": "Invalid Route Test",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns 404 for invalid route', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.false;",
+                  "    pm.expect(response.message).to.include('not found');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/invalid-route",
+              "host": ["{{base_url}}"],
+              "path": ["api", "invalid-route"]
+            },
+            "description": "Test 404 handling for invalid routes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Domain Utilities",
+      "item": [
+        {
+          "name": "Check Multiple Domains",
+          "item": [
+            {
+              "name": "Check saherflow.com",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/company/check-domain/saherflow.com",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "company", "check-domain", "saherflow.com"]
+                }
+              }
+            },
+            {
+              "name": "Check adnoc.ae",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/company/check-domain/adnoc.ae",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "company", "check-domain", "adnoc.ae"]
+                }
+              }
+            },
+            {
+              "name": "Check qtm.com.qa",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/company/check-domain/qtm.com.qa",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "company", "check-domain", "qtm.com.qa"]
+                }
+              }
+            },
+            {
+              "name": "Check unauthorized domain",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/company/check-domain/unauthorized.com",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "company", "check-domain", "unauthorized.com"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Data Validation",
+      "item": [
+        {
+          "name": "Get All Active Companies",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Returns list of companies', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.data.companies).to.be.an('array');",
+                  "    console.log('Total companies:', response.data.companies.length);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/company",
+              "host": ["{{base_url}}"],
+              "path": ["api", "company"]
+            },
+            "description": "Verify seeded companies are available"
+          }
+        }
+      ]
+    }
+  ]
+}

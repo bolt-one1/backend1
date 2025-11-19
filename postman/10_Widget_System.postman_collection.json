@@ -1,0 +1,626 @@
+{
+  "info": {
+    "name": "10 - Widget System",
+    "description": "Dynamic widget system for customizable dashboards with drag-and-drop functionality",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Widget Types",
+      "item": [
+        {
+          "name": "Get All Widget Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/widget-types",
+              "host": ["{{base_url}}"],
+              "path": ["api", "widget-types"]
+            }
+          }
+        },
+        {
+          "name": "Get Widget Type by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/widget-types/{{widget_type_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "widget-types", "{{widget_type_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Widget Type (Admin Only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"custom_chart\",\n  \"component_name\": \"CustomChartWidget\",\n  \"default_config\": {\n    \"showLegend\": true,\n    \"colors\": [\"#3b82f6\", \"#8b5cf6\"]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/widget-types",
+              "host": ["{{base_url}}"],
+              "path": ["api", "widget-types"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Widget Definitions",
+      "item": [
+        {
+          "name": "Get All Widget Definitions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/widget-definitions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "widget-definitions"]
+            }
+          }
+        },
+        {
+          "name": "Get My Widget Definitions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/widget-definitions?my_widgets=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "widget-definitions"],
+              "query": [
+                {
+                  "key": "my_widgets",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Widget Definition by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/widget-definitions/{{widget_definition_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "widget-definitions", "{{widget_definition_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Widget Definition",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Oil Production Chart\",\n  \"description\": \"Real-time oil production monitoring\",\n  \"widget_type_id\": \"{{widget_type_id}}\",\n  \"data_source_config\": {\n    \"endpoint\": \"/api/charts/oil-production\",\n    \"refreshInterval\": 30000,\n    \"params\": {\n      \"timeRange\": \"24h\"\n    }\n  },\n  \"layout_config\": {\n    \"w\": 6,\n    \"h\": 3,\n    \"minW\": 4,\n    \"minH\": 2\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/widget-definitions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "widget-definitions"]
+            }
+          }
+        },
+        {
+          "name": "Update Widget Definition",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Oil Production Chart\",\n  \"description\": \"Enhanced oil production monitoring\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/widget-definitions/{{widget_definition_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "widget-definitions", "{{widget_definition_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Widget Definition",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/widget-definitions/{{widget_definition_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "widget-definitions", "{{widget_definition_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboards",
+      "item": [
+        {
+          "name": "Get All My Dashboards",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboards",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboards"]
+            }
+          }
+        },
+        {
+          "name": "Get Dashboard by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboards/{{dashboard_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboards", "{{dashboard_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Dashboard",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Production Overview\",\n  \"description\": \"Main production monitoring dashboard\",\n  \"grid_config\": {\n    \"cols\": 12,\n    \"rowHeight\": 100,\n    \"margin\": [10, 10]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/dashboards",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboards"]
+            }
+          }
+        },
+        {
+          "name": "Create Dashboard with Widgets",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Production Dashboard\",\n  \"description\": \"Complete production monitoring\",\n  \"widgets\": [\n    {\n      \"widget_definition_id\": \"{{widget_definition_id}}\",\n      \"layout_config\": {\n        \"x\": 0,\n        \"y\": 0,\n        \"w\": 6,\n        \"h\": 3\n      }\n    },\n    {\n      \"widget_definition_id\": \"{{widget_definition_id_2}}\",\n      \"layout_config\": {\n        \"x\": 6,\n        \"y\": 0,\n        \"w\": 6,\n        \"h\": 3\n      }\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/dashboards",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboards"]
+            }
+          }
+        },
+        {
+          "name": "Update Dashboard",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Production Overview\",\n  \"description\": \"Enhanced production dashboard\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/dashboards/{{dashboard_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboards", "{{dashboard_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Duplicate Dashboard",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Production Overview - Copy\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/dashboards/{{dashboard_id}}/duplicate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboards", "{{dashboard_id}}", "duplicate"]
+            }
+          }
+        },
+        {
+          "name": "Delete Dashboard",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboards/{{dashboard_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboards", "{{dashboard_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard Sharing",
+      "item": [
+        {
+          "name": "Get Dashboard Shares",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboards/{{dashboard_id}}/shares",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboards", "{{dashboard_id}}", "shares"]
+            }
+          }
+        },
+        {
+          "name": "Share Dashboard",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 2,\n  \"permission_level\": \"view\",\n  \"expires_at\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/dashboards/{{dashboard_id}}/share",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboards", "{{dashboard_id}}", "share"]
+            }
+          }
+        },
+        {
+          "name": "Revoke Dashboard Access",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboards/{{dashboard_id}}/share/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboards", "{{dashboard_id}}", "share", "{{user_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard Layouts",
+      "item": [
+        {
+          "name": "Get Dashboard Layouts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard-layouts/dashboard/{{dashboard_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard-layouts", "dashboard", "{{dashboard_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Layout by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard-layouts/{{layout_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard-layouts", "{{layout_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Add Widget to Dashboard",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dashboard_id\": \"{{dashboard_id}}\",\n  \"widget_definition_id\": \"{{widget_definition_id}}\",\n  \"layout_config\": {\n    \"x\": 0,\n    \"y\": 0,\n    \"w\": 6,\n    \"h\": 3,\n    \"minW\": 4,\n    \"minH\": 2\n  },\n  \"instance_config\": {\n    \"title\": \"Custom Widget Title\"\n  },\n  \"display_order\": 0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/dashboard-layouts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard-layouts"]
+            }
+          }
+        },
+        {
+          "name": "Update Layout",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"layout_config\": {\n    \"x\": 6,\n    \"y\": 0,\n    \"w\": 6,\n    \"h\": 3\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/dashboard-layouts/{{layout_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard-layouts", "{{layout_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Bulk Update Layouts (Drag & Drop)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"layouts\": [\n    {\n      \"id\": \"{{layout_id_1}}\",\n      \"layout_config\": {\n        \"x\": 0,\n        \"y\": 0,\n        \"w\": 4,\n        \"h\": 2\n      }\n    },\n    {\n      \"id\": \"{{layout_id_2}}\",\n      \"layout_config\": {\n        \"x\": 4,\n        \"y\": 0,\n        \"w\": 4,\n        \"h\": 2\n      }\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/dashboard-layouts/dashboard/{{dashboard_id}}/bulk",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard-layouts", "dashboard", "{{dashboard_id}}", "bulk"]
+            }
+          }
+        },
+        {
+          "name": "Remove Widget from Dashboard",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard-layouts/{{layout_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard-layouts", "{{layout_id}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "widget_type_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "widget_definition_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "dashboard_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "layout_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

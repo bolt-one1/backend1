@@ -1,0 +1,423 @@
+{
+  "info": {
+    "name": "02 - Company Management API",
+    "description": "Complete company management endpoints for admin users",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{admin_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "company_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Setup",
+      "item": [
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.token) {",
+                  "        pm.collectionVariables.set('admin_token', response.data.token);",
+                  "        console.log('Admin token saved');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@saherflow.com\",\n  \"password\": \"Admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login as admin to get authentication token"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Company CRUD Operations",
+      "item": [
+        {
+          "name": "Get All Companies (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/company",
+              "host": ["{{base_url}}"],
+              "path": ["api", "company"]
+            },
+            "description": "Get all active companies (public endpoint)"
+          }
+        },
+        {
+          "name": "Get All Companies (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/company",
+              "host": ["{{base_url}}"],
+              "path": ["api", "company"]
+            },
+            "description": "Get all companies including inactive ones (admin view)"
+          }
+        },
+        {
+          "name": "Get Company by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/company/{{company_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "company", "{{company_id}}"]
+            },
+            "description": "Get specific company details (admin only)"
+          }
+        },
+        {
+          "name": "Create New Company",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.company._id) {",
+                  "        pm.collectionVariables.set('company_id', response.data.company._id);",
+                  "        console.log('Company ID saved:', response.data.company._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"TechCorp Solutions\",\n  \"domains\": [\"techcorp.com\", \"techcorp.net\"],\n  \"description\": \"Leading technology solutions provider\",\n  \"contactEmail\": \"admin@techcorp.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/company",
+              "host": ["{{base_url}}"],
+              "path": ["api", "company"]
+            },
+            "description": "Create a new company (admin only)"
+          }
+        },
+        {
+          "name": "Update Company",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"TechCorp Solutions Updated\",\n  \"domains\": [\"techcorp.com\", \"techcorp.net\", \"techcorp.org\"],\n  \"description\": \"Updated description for leading technology solutions provider\",\n  \"contactEmail\": \"contact@techcorp.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/company/{{company_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "company", "{{company_id}}"]
+            },
+            "description": "Update existing company (admin only)"
+          }
+        },
+        {
+          "name": "Deactivate Company",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/company/{{company_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "company", "{{company_id}}"]
+            },
+            "description": "Deactivate a company (admin only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Domain Validation",
+      "item": [
+        {
+          "name": "Check Approved Domain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/company/check-domain/saherflow.com",
+              "host": ["{{base_url}}"],
+              "path": ["api", "company", "check-domain", "saherflow.com"]
+            },
+            "description": "Check if domain is approved for registration"
+          }
+        },
+        {
+          "name": "Check Unapproved Domain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/company/check-domain/unauthorized.com",
+              "host": ["{{base_url}}"],
+              "path": ["api", "company", "check-domain", "unauthorized.com"]
+            },
+            "description": "Check unapproved domain (should return false)"
+          }
+        },
+        {
+          "name": "Check Subdomain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/company/check-domain/mail.saherflow.com",
+              "host": ["{{base_url}}"],
+              "path": ["api", "company", "check-domain", "mail.saherflow.com"]
+            },
+            "description": "Check if subdomain is allowed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Validation Tests",
+      "item": [
+        {
+          "name": "Create Company - Missing Required Fields",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Corp\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/company",
+              "host": ["{{base_url}}"],
+              "path": ["api", "company"]
+            },
+            "description": "Test validation - should fail due to missing domains"
+          }
+        },
+        {
+          "name": "Create Company - Invalid Domain Format",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Invalid Domain Corp\",\n  \"domains\": [\"invalid-domain\", \"another.invalid\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/company",
+              "host": ["{{base_url}}"],
+              "path": ["api", "company"]
+            },
+            "description": "Test validation - should fail due to invalid domain format"
+          }
+        },
+        {
+          "name": "Create Company - Duplicate Name",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Saudi saherflow\",\n  \"domains\": [\"duplicate-test.com\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/company",
+              "host": ["{{base_url}}"],
+              "path": ["api", "company"]
+            },
+            "description": "Test validation - should fail due to duplicate company name"
+          }
+        },
+        {
+          "name": "Create Company - Duplicate Domain",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Duplicate Domain Corp\",\n  \"domains\": [\"saherflow.com\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/company",
+              "host": ["{{base_url}}"],
+              "path": ["api", "company"]
+            },
+            "description": "Test validation - should fail due to duplicate domain"
+          }
+        }
+      ]
+    }
+  ]
+}

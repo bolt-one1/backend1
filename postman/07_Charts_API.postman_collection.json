@@ -1,0 +1,639 @@
+{
+  "info": {
+    "name": "07 - Charts API",
+    "description": "Chart and device data endpoints for real-time monitoring",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "device_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "hierarchy_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Setup",
+      "item": [
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.token) {",
+                  "        pm.collectionVariables.set('admin_token', response.data.token);",
+                  "        console.log('Admin token saved');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@saherflow.com\",\n  \"password\": \"Admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "User Login (Arabco)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.token) {",
+                  "        pm.collectionVariables.set('user_token', response.data.token);",
+                  "        console.log('User token saved');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@arabco.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Device Charts",
+      "item": [
+        {
+          "name": "Get Device Chart Data (Current Day)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/device/{{device_id}}?timeRange=day",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "device", "{{device_id}}"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "day"
+                }
+              ]
+            },
+            "description": "Get chart data for a specific device for current day"
+          }
+        },
+        {
+          "name": "Get Device Chart Data (Current Hour)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/device/{{device_id}}?timeRange=hour",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "device", "{{device_id}}"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "hour"
+                }
+              ]
+            },
+            "description": "Get chart data for a specific device for current hour"
+          }
+        },
+        {
+          "name": "Get Device Chart Data (Week)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/device/{{device_id}}?timeRange=week",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "device", "{{device_id}}"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "week"
+                }
+              ]
+            },
+            "description": "Get chart data for a specific device for past week"
+          }
+        },
+        {
+          "name": "Get Device Chart Data (Month)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/device/{{device_id}}?timeRange=month",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "device", "{{device_id}}"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "month"
+                }
+              ]
+            },
+            "description": "Get chart data for a specific device for past month"
+          }
+        },
+        {
+          "name": "Get Real-time Device Data",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/device/{{device_id}}/realtime",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "device", "{{device_id}}", "realtime"]
+            },
+            "description": "Get latest real-time data for a specific device"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hierarchy Charts",
+      "item": [
+        {
+          "name": "Get Region Chart Data (Eastern Region)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/hierarchy/1?timeRange=day",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "hierarchy", "1"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "day"
+                }
+              ]
+            },
+            "description": "Get aggregated chart data for Eastern Region (all devices under this hierarchy)"
+          }
+        },
+        {
+          "name": "Get Area Chart Data (Abqaiq Area)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/hierarchy/2?timeRange=day",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "hierarchy", "2"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "day"
+                }
+              ]
+            },
+            "description": "Get aggregated chart data for Abqaiq Area"
+          }
+        },
+        {
+          "name": "Get Field Chart Data (Ghawar Field)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/hierarchy/3?timeRange=day",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "hierarchy", "3"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "day"
+                }
+              ]
+            },
+            "description": "Get aggregated chart data for Ghawar Field"
+          }
+        },
+        {
+          "name": "Get Well Chart Data (Well-101)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/hierarchy/4?timeRange=day",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "hierarchy", "4"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "day"
+                }
+              ]
+            },
+            "description": "Get aggregated chart data for Well-101"
+          }
+        },
+        {
+          "name": "Get Hierarchy Chart Data (Hour)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/hierarchy/{{hierarchy_id}}?timeRange=hour",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "hierarchy", "{{hierarchy_id}}"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "hour"
+                }
+              ]
+            },
+            "description": "Get aggregated chart data for hierarchy (current hour)"
+          }
+        },
+        {
+          "name": "Get Hierarchy Chart Data (Week)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/hierarchy/{{hierarchy_id}}?timeRange=week",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "hierarchy", "{{hierarchy_id}}"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "week"
+                }
+              ]
+            },
+            "description": "Get aggregated chart data for hierarchy (past week)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Summary",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "dashboard"]
+            },
+            "description": "Get dashboard summary for user's company"
+          }
+        },
+        {
+          "name": "Get Dashboard Summary (Admin - Specific Company)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/dashboard?company_id=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "dashboard"],
+              "query": [
+                {
+                  "key": "company_id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Get dashboard summary for specific company (admin only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Access Control Tests",
+      "item": [
+        {
+          "name": "Access Device from Another Company",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/device/2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "device", "2"]
+            },
+            "description": "Test access control - should fail if device belongs to another company"
+          }
+        },
+        {
+          "name": "Access Hierarchy from Another Company",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/hierarchy/5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "hierarchy", "5"]
+            },
+            "description": "Test access control - should fail if hierarchy belongs to another company"
+          }
+        },
+        {
+          "name": "Access Charts Without Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/device/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "device", "1"]
+            },
+            "description": "Test authentication - should fail (401 Unauthorized)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Data Validation Tests",
+      "item": [
+        {
+          "name": "Get Non-existent Device",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/device/999",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "device", "999"]
+            },
+            "description": "Test with non-existent device ID (should return 404)"
+          }
+        },
+        {
+          "name": "Get Non-existent Hierarchy",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/hierarchy/999",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "hierarchy", "999"]
+            },
+            "description": "Test with non-existent hierarchy ID (should return 404)"
+          }
+        },
+        {
+          "name": "Get Device Chart with Invalid Time Range",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/charts/device/{{device_id}}?timeRange=invalid",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "device", "{{device_id}}"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "invalid"
+                }
+              ]
+            },
+            "description": "Test with invalid time range (should default to 'day')"
+          }
+        }
+      ]
+    }
+  ]
+}

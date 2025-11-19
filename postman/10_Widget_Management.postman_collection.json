@@ -1,0 +1,831 @@
+{
+  "info": {
+    "name": "10. Widget Management API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Widget Management API Collection for Saher Flow platform. Demonstrates complete data loading flow for line charts with OFR example.",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "01. Authentication",
+      "description": "Login flows for admin and regular user",
+      "item": [
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin login successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.user.role).to.eql('admin');",
+                  "    pm.environment.set('adminToken', jsonData.data.token);",
+                  "    console.log('Admin token set:', jsonData.data.token.substring(0, 20) + '...');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"admin@saherflow.com\",\n    \"password\": \"Admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Regular User Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('User login successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.user.role).to.eql('user');",
+                  "    pm.environment.set('userToken', jsonData.data.token);",
+                  "    console.log('User token set:', jsonData.data.token.substring(0, 20) + '...');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"john@arabco.com\",\n    \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02. Dashboard & Widget Loading",
+      "description": "Load dashboard structure and widget data for OFR line chart",
+      "item": [
+        {
+          "name": "Get User Dashboard",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Dashboard loaded successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.dashboard).to.exist;",
+                  "    pm.expect(jsonData.data.widgets).to.be.an('array');",
+                  "    ",
+                  "    // Find OFR line chart widget",
+                  "    const ofrWidget = jsonData.data.widgets.find(",
+                  "        w => w.name && w.name.toUpperCase().includes('OFR') && w.type === 'line_chart'",
+                  "    );",
+                  "    ",
+                  "    if (ofrWidget) {",
+                  "        pm.environment.set('ofrWidgetId', ofrWidget.widgetId);",
+                  "        console.log('Found OFR Chart widget:', ofrWidget.name);",
+                  "        console.log('Widget ID:', ofrWidget.widgetId);",
+                  "        console.log('Data source config:', JSON.stringify(ofrWidget.dataSourceConfig, null, 2));",
+                  "    } else {",
+                  "        console.warn('No OFR Chart widget found in dashboard');",
+                  "        if (jsonData.data.widgets.length > 0) {",
+                  "            console.log('Available widgets:');",
+                  "            jsonData.data.widgets.forEach(w => console.log(`- ${w.name} (${w.type})`));",
+                  "        }",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/user-dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "user-dashboard"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Load OFR Chart Data (24h)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('OFR data loaded successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    ",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('object');",
+                  "    ",
+                  "    // Check for OFR data series",
+                  "    const seriesNames = Object.keys(jsonData.data);",
+                  "    pm.expect(seriesNames.length).to.be.at.least(1);",
+                  "    ",
+                  "    seriesNames.forEach(seriesName => {",
+                  "        pm.expect(jsonData.data[seriesName]).to.have.property('data');",
+                  "        pm.expect(jsonData.data[seriesName]).to.have.property('unit');",
+                  "        pm.expect(jsonData.data[seriesName]).to.have.property('propertyName');",
+                  "        ",
+                  "        const dataPoints = jsonData.data[seriesName].data;",
+                  "        console.log(`Series: ${seriesName}`);",
+                  "        console.log(`Unit: ${jsonData.data[seriesName].unit}`);",
+                  "        console.log(`Data points: ${dataPoints.length}`);",
+                  "        ",
+                  "        if (dataPoints.length > 0) {",
+                  "            console.log(`First data point: ${new Date(dataPoints[0].timestamp).toISOString()} - ${dataPoints[0].value} ${jsonData.data[seriesName].unit}`);",
+                  "            console.log(`Last data point: ${new Date(dataPoints[dataPoints.length-1].timestamp).toISOString()} - ${dataPoints[dataPoints.length-1].value} ${jsonData.data[seriesName].unit}`);",
+                  "        }",
+                  "    });",
+                  "    ",
+                  "    console.log('Context:', JSON.stringify(jsonData.context, null, 2));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/widget-data/{{ofrWidgetId}}?timeRange=24h",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "widget-data", "{{ofrWidgetId}}"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "24h"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Load OFR Chart Data (1h)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('1 hour data loaded', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.context.timeRange).to.eql('1h');",
+                  "    ",
+                  "    const dataPoints = jsonData.data[Object.keys(jsonData.data)[0]].data;",
+                  "    console.log(`1h time range: ${dataPoints.length} data points`);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/widget-data/{{ofrWidgetId}}?timeRange=1h",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "widget-data", "{{ofrWidgetId}}"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "1h"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Load OFR Chart Data with Hierarchy Filter",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Hierarchy filtered data loaded', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.context.hierarchyId).to.exist;",
+                  "    console.log('Hierarchy filter applied:', jsonData.context.hierarchyId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/widget-data/{{ofrWidgetId}}?timeRange=24h&hierarchyId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "widget-data", "{{ofrWidgetId}}"],
+              "query": [
+                {
+                  "key": "timeRange",
+                  "value": "24h"
+                },
+                {
+                  "key": "hierarchyId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Load OFR Latest Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Latest data loaded', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    ",
+                  "    const seriesNames = Object.keys(jsonData.data);",
+                  "    seriesNames.forEach(seriesName => {",
+                  "        const ofrData = jsonData.data[seriesName];",
+                  "        pm.expect(ofrData).to.have.property('latest');",
+                  "        pm.expect(ofrData).to.have.property('aggregatedValue');",
+                  "        pm.expect(ofrData).to.have.property('count');",
+                  "        ",
+                  "        console.log(`Series: ${seriesName}`);",
+                  "        console.log(`Latest aggregated value: ${ofrData.aggregatedValue} ${ofrData.unit}`);",
+                  "        console.log(`Number of devices: ${ofrData.count}`);",
+                  "        ",
+                  "        if (ofrData.latest.length > 0) {",
+                  "            console.log(`Sample devices:`);",
+                  "            ofrData.latest.slice(0, 3).forEach(device => {",
+                  "                console.log(`  - ${device.serialNumber}: ${device.value} ${ofrData.unit}`);",
+                  "            });",
+                  "        }",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/widget-data/{{ofrWidgetId}}/latest",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "widget-data", "{{ofrWidgetId}}", "latest"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03. Admin Widget Management",
+      "description": "Test admin capabilities for creating and managing widgets",
+      "item": [
+        {
+          "name": "Get Device Types (Admin Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Device types loaded', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "    pm.expect(jsonData.data.length).to.be.at.least(1);",
+                  "    ",
+                  "    jsonData.data.forEach(dt => console.log(`Device Type: ${dt.typeName}`));",
+                  "    ",
+                  "    // Store first device type ID",
+                  "    const mpfmType = jsonData.data.find(dt => dt.typeName === 'MPFM');",
+                  "    if (mpfmType) {",
+                  "        pm.environment.set('deviceTypeId', mpfmType.id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/device-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "device-types"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Widgets for Device Type",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Available widgets loaded', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.widgetTypes).to.be.an('array');",
+                  "    pm.expect(jsonData.data.properties).to.be.an('array');",
+                  "    ",
+                  "    console.log('Available Widget Types:');",
+                  "    jsonData.data.widgetTypes.forEach(wt => console.log(`  - ${wt.displayName}`));",
+                  "    ",
+                  "    // Store line_chart widget type ID",
+                  "    const lineChartType = jsonData.data.widgetTypes.find(wt => wt.name === 'line_chart');",
+                  "    if (lineChartType) {",
+                  "        pm.environment.set('lineChartTypeId', lineChartType.id);",
+                  "    }",
+                  "    ",
+                  "    // Find OFR property",
+                  "    const ofrProp = jsonData.data.properties.find(p => p.tag === 'OFR');",
+                  "    if (ofrProp) {",
+                  "        pm.environment.set('ofrPropertyId', ofrProp.id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/available-widgets?deviceTypeId={{deviceTypeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "available-widgets"],
+              "query": [
+                {
+                  "key": "deviceTypeId",
+                  "value": "{{deviceTypeId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Custom Widget",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Widget created successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.widgetId).to.exist;",
+                  "    pm.environment.set('customWidgetId', jsonData.data.widgetId);",
+                  "    console.log('Custom widget created:', jsonData.data.widgetName);",
+                  "    console.log('Widget ID:', jsonData.data.widgetId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"deviceTypeId\": {{deviceTypeId}},\n    \"widgetTypeId\": \"line_chart\",\n    \"propertyIds\": [{{ofrPropertyId}}],\n    \"displayName\": \"OFR Custom Chart\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/create-widget",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "create-widget"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Widget to Dashboard",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Widget added to dashboard', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.layoutId).to.exist;",
+                  "    pm.environment.set('layoutId', jsonData.data.layoutId);",
+                  "    console.log('Widget added with layout ID:', jsonData.data.layoutId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"widgetDefinitionId\": \"{{customWidgetId}}\",\n    \"layoutConfig\": {\n        \"x\": 0,\n        \"y\": 6,\n        \"w\": 6,\n        \"h\": 3,\n        \"minW\": 4,\n        \"minH\": 2,\n        \"static\": false\n    }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/add-to-dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "add-to-dashboard"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Widget Layout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Layout updated successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    console.log('Widget layout updated');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"layouts\": [\n        {\n            \"layoutId\": \"{{layoutId}}\",\n            \"layoutConfig\": {\n                \"x\": 6,\n                \"y\": 6,\n                \"w\": 6,\n                \"h\": 3,\n                \"minW\": 4,\n                \"minH\": 2,\n                \"static\": false\n            }\n        }\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/update-layout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "update-layout"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Widget from Dashboard",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Widget removed successfully', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    console.log('Widget removed from dashboard');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/remove-widget/{{layoutId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "remove-widget", "{{layoutId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04. Access Control Tests",
+      "description": "Verify access control between admin and regular users",
+      "item": [
+        {
+          "name": "User Cannot Access Admin Endpoints",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('User cannot access admin endpoint', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    console.log('Access denied:', jsonData.message);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/device-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "device-types"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "User Cannot Create Widget",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('User cannot create widget', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    console.log('Access denied:', jsonData.message);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"deviceTypeId\": 1,\n    \"widgetTypeId\": \"line_chart\",\n    \"propertyIds\": [1]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/create-widget",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "create-widget"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05. Error Scenarios",
+      "description": "Test error handling",
+      "item": [
+        {
+          "name": "Invalid Widget ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Invalid widget ID handled', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    console.log('Error:', jsonData.message);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/widget-data/invalid-widget-id-12345",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "widget-data", "invalid-widget-id-12345"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Missing Required Parameters",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Missing parameters detected', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    console.log('Error:', jsonData.message);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"deviceTypeId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/widgets/create-widget",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "widgets", "create-widget"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "default"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "deviceTypeId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ofrWidgetId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ofrPropertyId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customWidgetId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "layoutId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "lineChartTypeId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

@@ -1,0 +1,996 @@
+{
+  "info": {
+    "name": "09 - Alarms API",
+    "description": "Complete alarms management endpoints for device monitoring and alerting",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "alarm_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "hierarchy_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Setup",
+      "item": [
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.token) {",
+                  "        pm.collectionVariables.set('admin_token', response.data.token);",
+                  "        console.log('Admin token saved');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@saherflow.com\",\n  \"password\": \"Admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "User Login (Arabco)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.token) {",
+                  "        pm.collectionVariables.set('user_token', response.data.token);",
+                  "        console.log('User token saved');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@arabco.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alarms Management",
+      "item": [
+        {
+          "name": "Get All Alarms (User Company)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"]
+            },
+            "description": "Get all alarms for user's company with pagination and statistics"
+          }
+        },
+        {
+          "name": "Get Alarms with Filters",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms?device_serial=MPFM&severity=Critical&status_id=1&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"],
+              "query": [
+                {
+                  "key": "device_serial",
+                  "value": "MPFM"
+                },
+                {
+                  "key": "severity",
+                  "value": "Critical"
+                },
+                {
+                  "key": "status_id",
+                  "value": "1"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get alarms with device serial, severity, and status filters"
+          }
+        },
+        {
+          "name": "Get Alarms by Hierarchy (Eastern Region)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms?hierarchy_id=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"],
+              "query": [
+                {
+                  "key": "hierarchy_id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Get all alarms for Eastern Region and its child hierarchies"
+          }
+        },
+        {
+          "name": "Get Alarms by Hierarchy (Ghawar Field)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms?hierarchy_id=3",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"],
+              "query": [
+                {
+                  "key": "hierarchy_id",
+                  "value": "3"
+                }
+              ]
+            },
+            "description": "Get all alarms for Ghawar Field and its wells"
+          }
+        },
+        {
+          "name": "Get Alarms by Well (Well-101)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms?hierarchy_id=4",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"],
+              "query": [
+                {
+                  "key": "hierarchy_id",
+                  "value": "4"
+                }
+              ]
+            },
+            "description": "Get all alarms for Well-101 devices"
+          }
+        },
+        {
+          "name": "Get Alarms Sorted by Severity",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms?sort_by=created_at&sort_order=DESC&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"],
+              "query": [
+                {
+                  "key": "sort_by",
+                  "value": "created_at"
+                },
+                {
+                  "key": "sort_order",
+                  "value": "DESC"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Get alarms sorted by creation time (newest first)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alarm Details",
+      "item": [
+        {
+          "name": "Get Alarm by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms/{{alarm_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms", "{{alarm_id}}"]
+            },
+            "description": "Get detailed information for a specific alarm"
+          }
+        },
+        {
+          "name": "Get Specific Alarm (ID: 5)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms/5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms", "5"]
+            },
+            "description": "Get details for alarm ID 5"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alarm Status Management",
+      "item": [
+        {
+          "name": "Acknowledge Alarm",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status_id\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/alarms/{{alarm_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms", "{{alarm_id}}", "status"]
+            },
+            "description": "Acknowledge an alarm (status_id: 2)"
+          }
+        },
+        {
+          "name": "Resolve Alarm",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status_id\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/alarms/10/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms", "10", "status"]
+            },
+            "description": "Resolve an alarm (status_id: 3)"
+          }
+        },
+        {
+          "name": "Reactivate Alarm",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/alarms/15/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms", "15", "status"]
+            },
+            "description": "Reactivate an alarm (status_id: 1)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Alarm Management",
+      "item": [
+        {
+          "name": "Create New Alarm (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_serial\": \"MPFM-ARB-101\",\n  \"alarm_type_id\": 6,\n  \"message\": \"Manual alarm created for testing purposes\",\n  \"metadata\": {\n    \"created_by\": \"admin\",\n    \"test_alarm\": true,\n    \"priority\": \"high\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/alarms",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"]
+            },
+            "description": "Create a new alarm (admin only)"
+          }
+        },
+        {
+          "name": "Get All Alarms (Admin - All Companies)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"]
+            },
+            "description": "Admin can see all alarms across companies"
+          }
+        },
+        {
+          "name": "Get Alarms for Specific Company (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms?company_id=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"],
+              "query": [
+                {
+                  "key": "company_id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Admin can filter alarms by specific company"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alarm Types & Statuses",
+      "item": [
+        {
+          "name": "Get All Alarm Types",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms/types/all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms", "types", "all"]
+            },
+            "description": "Get all available alarm types with severity levels"
+          }
+        },
+        {
+          "name": "Get All Alarm Statuses",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms/statuses/all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms", "statuses", "all"]
+            },
+            "description": "Get all available alarm statuses"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard & Statistics",
+      "item": [
+        {
+          "name": "Get Alarm Dashboard Stats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms/dashboard/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms", "dashboard", "stats"]
+            },
+            "description": "Get alarm statistics and recent alarms for dashboard"
+          }
+        },
+        {
+          "name": "Get Dashboard Stats for Hierarchy",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms/dashboard/stats?hierarchy_id=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms", "dashboard", "stats"],
+              "query": [
+                {
+                  "key": "hierarchy_id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Get alarm statistics for specific hierarchy (Eastern Region)"
+          }
+        },
+        {
+          "name": "Get Dashboard Stats (Admin - Specific Company)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms/dashboard/stats?company_id=2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms", "dashboard", "stats"],
+              "query": [
+                {
+                  "key": "company_id",
+                  "value": "2"
+                }
+              ]
+            },
+            "description": "Admin can get dashboard stats for specific company"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Filter & Search Tests",
+      "item": [
+        {
+          "name": "Filter by Critical Alarms",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms?severity=Critical",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"],
+              "query": [
+                {
+                  "key": "severity",
+                  "value": "Critical"
+                }
+              ]
+            },
+            "description": "Get only critical severity alarms"
+          }
+        },
+        {
+          "name": "Filter by Active Alarms",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms?status_id=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"],
+              "query": [
+                {
+                  "key": "status_id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Get only active alarms"
+          }
+        },
+        {
+          "name": "Filter by Alarm Type",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms?alarm_type_id=2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"],
+              "query": [
+                {
+                  "key": "alarm_type_id",
+                  "value": "2"
+                }
+              ]
+            },
+            "description": "Get alarms of specific type (Flow Low)"
+          }
+        },
+        {
+          "name": "Search by Device Serial",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms?device_serial=MPFM-ARB-101",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"],
+              "query": [
+                {
+                  "key": "device_serial",
+                  "value": "MPFM-ARB-101"
+                }
+              ]
+            },
+            "description": "Search alarms for specific device"
+          }
+        },
+        {
+          "name": "Combined Filters",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms?hierarchy_id=3&severity=Major&status_id=1&limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"],
+              "query": [
+                {
+                  "key": "hierarchy_id",
+                  "value": "3"
+                },
+                {
+                  "key": "severity",
+                  "value": "Major"
+                },
+                {
+                  "key": "status_id",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Test multiple filters combined"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Access Control Tests",
+      "item": [
+        {
+          "name": "Access Alarm from Another Company",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms/999",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms", "999"]
+            },
+            "description": "Test access control - should fail if alarm belongs to another company"
+          }
+        },
+        {
+          "name": "Create Alarm as Regular User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_serial\": \"MPFM-ARB-101\",\n  \"alarm_type_id\": 1,\n  \"message\": \"Unauthorized alarm creation attempt\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/alarms",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"]
+            },
+            "description": "Test admin access - should fail (403 Forbidden)"
+          }
+        },
+        {
+          "name": "Access Alarms Without Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"]
+            },
+            "description": "Test authentication - should fail (401 Unauthorized)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pagination Tests",
+      "item": [
+        {
+          "name": "Get First Page (5 items)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms?page=1&limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Test pagination - first page with 5 items"
+          }
+        },
+        {
+          "name": "Get Second Page (5 items)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/alarms?page=2&limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alarms"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Test pagination - second page with 5 items"
+          }
+        }
+      ]
+    }
+  ]
+}
