@@ -3,6 +3,9 @@ const router = express.Router();
 const database = require('../config/database');
 const { protect } = require('../middleware/auth');
 const { buildExpressionCase, buildPostAggregationExpression, extractDependentVariables } = require('../utils/expressionBuilder');
+const { buildHistoricalAggregationQuery, buildRealtimeAggregationQuery } = require('../utils/aggregationBuilder');
+
+
 
 if (typeof protect !== 'function') {
   console.error('ERROR: protect middleware is not a function. Check ../middleware/auth.js export.');
@@ -486,13 +489,21 @@ router.post('/update-layout', protect, async (req, res) => {
   }
 });
 
+
 router.get('/widget-data/:widgetId', protect, async (req, res) => {
   try {
     const { widgetId } = req.params;
-    const { limit = 200, timeRange = '24h', hierarchyId, deviceId } = req.query;
+    const {
+      limit = 200,
+      timeRange = 'today',
+      hierarchyId,
+      deviceId,
+      aggregationMethod = 'sum'
+    } = req.query;
+
     const companyId = req.user.company_id;
 
-    console.log(`[WIDGET DATA] Fetching data for widget ${widgetId}, timeRange: ${timeRange}, hierarchyId: ${hierarchyId}, deviceId: ${deviceId}`);
+    console.log(`[WIDGET DATA] Fetching for widget ${widgetId}, timeRange: ${timeRange}, aggregationMethod: ${aggregationMethod}`);
 
     const widgetResult = await database.query(
       `SELECT wd.data_source_config, wt.component_name, wt.name as widget_type
@@ -512,8 +523,6 @@ router.get('/widget-data/:widgetId', protect, async (req, res) => {
     const widget = widgetResult.rows[0];
     const dataSourceConfig = widget.data_source_config;
 
-    console.log('[WIDGET DATA] Widget config:', JSON.stringify(dataSourceConfig, null, 2));
-
     if (!dataSourceConfig.seriesConfig || dataSourceConfig.seriesConfig.length === 0) {
       return res.json({
         success: true,
@@ -521,35 +530,6 @@ router.get('/widget-data/:widgetId', protect, async (req, res) => {
         config: dataSourceConfig,
         message: 'No series configured'
       });
-    }
-
-    let timeFilter = '';
-    if (timeRange === '1h') timeFilter = "AND dd.created_at >= NOW() - INTERVAL '1 hour'";
-    else if (timeRange === '6h') timeFilter = "AND dd.created_at >= NOW() - INTERVAL '6 hours'";
-    else if (timeRange === '24h') timeFilter = "AND dd.created_at >= NOW() - INTERVAL '24 hours'";
-    else if (timeRange === '7d') timeFilter = "AND dd.created_at >= NOW() - INTERVAL '7 days'";
-    else if (timeRange === '30d') timeFilter = "AND dd.created_at >= NOW() - INTERVAL '30 days'";
-
-    let deviceFilterJoin = '';
-    let deviceFilterWhere = '';
-    let hasFilter = false;
-
-    if (hierarchyId) {
-      console.log(`[WIDGET DATA] Applying hierarchy filter: ${hierarchyId}`);
-      deviceFilterJoin = `
-        WITH RECURSIVE hierarchy_tree AS (
-          SELECT id FROM hierarchy WHERE id = $4
-          UNION ALL
-          SELECT h.id FROM hierarchy h
-          JOIN hierarchy_tree ht ON h.parent_id = ht.id
-        )
-      `;
-      deviceFilterWhere = `AND d.hierarchy_id IN (SELECT id FROM hierarchy_tree)`;
-      hasFilter = true;
-    } else if (deviceId) {
-      console.log(`[WIDGET DATA] Applying device filter: ${deviceId}`);
-      deviceFilterWhere = `AND d.id = $4`;
-      hasFilter = true;
     }
 
     const seriesData = {};
@@ -563,7 +543,7 @@ router.get('/widget-data/:widgetId', protect, async (req, res) => {
       );
 
       if (mappingResult.rows.length === 0) {
-        console.warn(`[WIDGET DATA] Property ID ${s.propertyId} not found for device type ${dataSourceConfig.deviceTypeId}`);
+        console.warn(`[WIDGET DATA] Property ID ${s.propertyId} not found`);
         continue;
       }
 
@@ -574,148 +554,33 @@ router.get('/widget-data/:widgetId', protect, async (req, res) => {
       const expression = mapping.expression;
       const requiresPostAgg = mapping.requires_post_aggregation;
 
-      console.log(`[WIDGET DATA] Loading series: ${variableName}, tag: ${variableTag}, unit: ${unit}, postAgg: ${requiresPostAgg}`);
+      console.log(`[WIDGET DATA] Loading series: ${variableName}, postAgg: ${requiresPostAgg}`);
 
-      const paramIndex = hasFilter ? 5 : 4;
-      const hasExpression = expression && expression.trim();
-      let seriesQuery;
+      const { query, params } = buildHistoricalAggregationQuery(
+        companyId,
+        dataSourceConfig.deviceTypeId,
+        variableTag,
+        variableName,
+        expression,
+        requiresPostAgg,
+        timeRange,
+        hierarchyId,
+        deviceId,
+        limit
+      );
 
-      if (hasExpression && requiresPostAgg && hierarchyId) {
-        console.log(`[WIDGET DATA] Using post-aggregation for ${variableName} with hierarchy filter`);
+      const seriesResult = await database.query(query, params);
 
-        const dependentVars = extractDependentVariables(expression);
-        const selectFields = dependentVars
-          .map(v => `AVG((dd.data->>'${v}')::numeric) AS ${v}`)
-          .join(',\n        ');
-
-        // Build a single WITH clause. If deviceFilterJoin already contains a WITH RECURSIVE,
-        // attach the next CTEs with a comma. Otherwise start a new WITH.
-        const withPrefix = deviceFilterJoin && deviceFilterJoin.trim() ? `${deviceFilterJoin.trim().endsWith(')') ? deviceFilterJoin.trim() + ',' : deviceFilterJoin.trim() + ','}` : 'WITH';
-
-        seriesQuery = `
-          ${withPrefix}
-          device_data_minute AS (
-            SELECT
-              dd.serial_number as device_id,
-              date_trunc('minute', dd.created_at) AS minute,
-              ${selectFields}
-            FROM device_data dd
-            INNER JOIN device d ON dd.device_id = d.id
-            WHERE d.company_id = $1
-              AND d.device_type_id = $2
-              ${deviceFilterWhere}
-              ${timeFilter}
-            GROUP BY dd.serial_number, date_trunc('minute', dd.created_at)
-          ),
-          summed AS (
-            SELECT
-              minute,
-              ${dependentVars.map(v => `SUM(${v}) AS ${v}`).join(',\n              ')}
-            FROM device_data_minute
-            GROUP BY minute
-          )
-          SELECT
-            minute as timestamp,
-            NULL as serial_number,
-            (${buildPostAggregationExpression(expression)}) as value
-          FROM summed
-          ORDER BY minute ASC
-          LIMIT $3
-        `;
-
-        const seriesParams = hasFilter
-          ? [companyId, dataSourceConfig.deviceTypeId, parseInt(limit), parseInt(hierarchyId || deviceId)]
-          : [companyId, dataSourceConfig.deviceTypeId, parseInt(limit)];
-
-        // helpful logging for debugging
-        console.log('[WIDGET DATA] Series query (first 400 chars):\n', seriesQuery.slice(0, 400));
-        console.log('[WIDGET DATA] Series params:', seriesParams);
-
-        const seriesResult = await database.query(seriesQuery, seriesParams);
-        console.log(`[WIDGET DATA] Series ${variableName} returned ${seriesResult.rows.length} aggregated data points`);
-
-        seriesData[variableName] = {
-          data: seriesResult.rows.map(row => ({
-            timestamp: row.timestamp,
-            serialNumber: row.serial_number || 'aggregated',
-            value: parseFloat(row.value) || 0
-          })),
-          unit: unit || '',
-          propertyName: variableName,
-          isAggregated: true
-        };
-      } else if (hasExpression) {
-        const sqlExpression = buildExpressionCase(expression, 'dd.data');
-        seriesQuery = `
-          ${deviceFilterJoin}
-          SELECT
-            dd.created_at as timestamp,
-            dd.serial_number,
-            (${sqlExpression}) as value
-          FROM device_data dd
-          INNER JOIN device d ON dd.device_id = d.id
-          WHERE d.company_id = $1
-            AND d.device_type_id = $2
-            ${deviceFilterWhere}
-            ${timeFilter}
-          ORDER BY dd.created_at ASC
-          LIMIT $3
-        `;
-
-        const seriesParams = hasFilter
-          ? [companyId, dataSourceConfig.deviceTypeId, parseInt(limit), parseInt(hierarchyId || deviceId)]
-          : [companyId, dataSourceConfig.deviceTypeId, parseInt(limit)];
-
-        const seriesResult = await database.query(seriesQuery, seriesParams);
-        console.log(`[WIDGET DATA] Series ${variableName} returned ${seriesResult.rows.length} data points`);
-
-        seriesData[variableName] = {
-          data: seriesResult.rows.map(row => ({
-            timestamp: row.timestamp,
-            serialNumber: row.serial_number,
-            value: parseFloat(row.value) || 0
-          })),
-          unit: unit || '',
-          propertyName: variableName
-        };
-      } else {
-        seriesQuery = `
-          ${deviceFilterJoin}
-          SELECT
-            dd.created_at as timestamp,
-            dd.serial_number,
-            COALESCE((dd.data->>$${paramIndex})::numeric, 0) as value
-          FROM device_data dd
-          INNER JOIN device d ON dd.device_id = d.id
-          WHERE d.company_id = $1
-            AND d.device_type_id = $2
-            ${deviceFilterWhere}
-            ${timeFilter}
-            AND dd.data ? $${paramIndex}
-          ORDER BY dd.created_at ASC
-          LIMIT $3
-        `;
-
-        const seriesParams = hasFilter
-          ? [companyId, dataSourceConfig.deviceTypeId, parseInt(limit), parseInt(hierarchyId || deviceId), variableTag]
-          : [companyId, dataSourceConfig.deviceTypeId, parseInt(limit), variableTag];
-
-        const seriesResult = await database.query(seriesQuery, seriesParams);
-        console.log(`[WIDGET DATA] Series ${variableName} returned ${seriesResult.rows.length} data points`);
-
-        seriesData[variableName] = {
-          data: seriesResult.rows.map(row => ({
-            timestamp: row.timestamp,
-            serialNumber: row.serial_number,
-            value: parseFloat(row.value) || 0
-          })),
-          unit: unit || '',
-          propertyName: variableName
-        };
-      }
+      seriesData[variableName] = {
+        data: seriesResult.rows.map(row => ({
+          timestamp: row.timestamp,
+          value: parseFloat(row.value) || 0
+        })),
+        unit: unit || '',
+        propertyName: variableName,
+        isAggregated: true
+      };
     }
-
-    console.log(`[WIDGET DATA] Returning data with ${Object.keys(seriesData).length} series`);
 
     res.json({
       success: true,
@@ -724,7 +589,8 @@ router.get('/widget-data/:widgetId', protect, async (req, res) => {
       context: {
         hierarchyId: hierarchyId || null,
         deviceId: deviceId || null,
-        timeRange
+        timeRange,
+        aggregationMethod
       }
     });
   } catch (error) {
@@ -740,7 +606,10 @@ router.get('/widget-data/:widgetId', protect, async (req, res) => {
 router.get('/widget-data/:widgetId/latest', protect, async (req, res) => {
   try {
     const { widgetId } = req.params;
+    const { hierarchyId, deviceId, aggregationMethod = 'sum' } = req.query;
     const companyId = req.user.company_id;
+
+    console.log(`[WIDGET DATA LATEST] Fetching for widget ${widgetId}, aggregationMethod: ${aggregationMethod}`);
 
     const widgetResult = await database.query(
       `SELECT wd.data_source_config, wt.component_name
@@ -769,6 +638,7 @@ router.get('/widget-data/:widgetId/latest', protect, async (req, res) => {
     }
 
     const seriesData = {};
+
     for (const s of dataSourceConfig.seriesConfig) {
       const mappingResult = await database.query(
         `SELECT variable_name, variable_tag, unit, expression, requires_post_aggregation
@@ -789,117 +659,48 @@ router.get('/widget-data/:widgetId/latest', protect, async (req, res) => {
       const expression = mapping.expression;
       const requiresPostAgg = mapping.requires_post_aggregation;
 
-      const hasExpression = expression && expression.trim();
-      let query;
+      const { query, params } = buildRealtimeAggregationQuery(
+        companyId,
+        dataSourceConfig.deviceTypeId,
+        variableTag,
+        expression,
+        requiresPostAgg,
+        aggregationMethod,
+        hierarchyId,
+        deviceId
+      );
 
-      if (hasExpression && requiresPostAgg) {
-        const dependentVars = extractDependentVariables(expression);
-        const selectFields = dependentVars
-          .map(v => `(dl.data->>'${v}')::numeric AS ${v}`)
-          .join(',\n        ');
-
-        query = `
-          WITH latest_data AS (
-            SELECT
-              ${selectFields},
-              dl.updated_at as timestamp,
-              dl.serial_number,
-              d.metadata->>'location' as location,
-              dt.type_name as device_type
-            FROM device_latest dl
-            INNER JOIN device d ON dl.device_id = d.id
-            INNER JOIN device_type dt ON d.device_type_id = dt.id
-            WHERE d.company_id = $1
-              AND d.device_type_id = $2
-          ),
-          summed AS (
-            SELECT
-              ${dependentVars.map(v => `COALESCE(SUM(${v}), 0) AS ${v}`).join(',\n              ')},
-              timestamp,
-              serial_number,
-              location,
-              device_type
-            FROM latest_data
-            GROUP BY timestamp, serial_number, location, device_type
-          )
-          SELECT
-            timestamp,
-            serial_number,
-            (${buildPostAggregationExpression(expression)})::text as value,
-            location,
-            device_type
-          FROM summed
-          ORDER BY timestamp DESC
-        `;
-      } else if (hasExpression) {
-        const sqlExpression = buildExpressionCase(expression, 'dl.data');
-        query = `
-          SELECT
-            dl.updated_at as timestamp,
-            dl.serial_number,
-            (${sqlExpression})::text as value,
-            d.metadata->>'location' as location,
-            dt.type_name as device_type
-          FROM device_latest dl
-          INNER JOIN device d ON dl.device_id = d.id
-          INNER JOIN device_type dt ON d.device_type_id = dt.id
-          WHERE d.company_id = $1
-            AND d.device_type_id = $2
-          ORDER BY dl.updated_at DESC
-        `;
-      } else {
-        query = `
-          SELECT
-            dl.updated_at as timestamp,
-            dl.serial_number,
-            dl.data->>$1 as value,
-            d.metadata->>'location' as location,
-            dt.type_name as device_type
-          FROM device_latest dl
-          INNER JOIN device d ON dl.device_id = d.id
-          INNER JOIN device_type dt ON d.device_type_id = dt.id
-          WHERE d.company_id = $2
-            AND d.device_type_id = $3
-          ORDER BY dl.updated_at DESC
-        `;
-      }
-
-      const params = hasExpression
-        ? [companyId, dataSourceConfig.deviceTypeId]
-        : [variableTag, companyId, dataSourceConfig.deviceTypeId];
       const dataResult = await database.query(query, params);
 
-      const formattedData = dataResult.rows.map(row => ({
-        timestamp: row.timestamp,
-        serialNumber: row.serial_number,
-        value: parseFloat(row.value) || 0,
-        location: row.location,
-        deviceType: row.device_type
-      }));
-
       let aggregatedValue = null;
-      if (formattedData.length > 0) {
-        if (requiresPostAgg && hasExpression) {
-          aggregatedValue = parseFloat(formattedData[0].value) || 0;
-        } else {
-          const sum = formattedData.reduce((acc, item) => acc + item.value, 0);
-          aggregatedValue = sum / formattedData.length;
-        }
+      let timestamp = null;
+      let deviceCount = null;
+
+      if (dataResult.rows.length > 0) {
+        aggregatedValue = parseFloat(dataResult.rows[0].value) || 0;
+        timestamp = dataResult.rows[0].timestamp;
+        deviceCount = dataResult.rows[0].device_count;
       }
 
       seriesData[variableName] = {
-        latest: formattedData,
         aggregatedValue,
-        count: formattedData.length,
+        timestamp,
+        deviceCount,
         unit,
-        isAggregated: requiresPostAgg && hasExpression
+        aggregationMethod,
+        isAggregated: requiresPostAgg && expression
       };
     }
 
     res.json({
       success: true,
       data: seriesData,
-      config: dataSourceConfig
+      config: dataSourceConfig,
+      context: {
+        hierarchyId: hierarchyId || null,
+        deviceId: deviceId || null,
+        aggregationMethod
+      }
     });
   } catch (error) {
     console.error('Error fetching latest widget data:', error);
